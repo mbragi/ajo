@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract AjoParty is ERC721, Ownable {
     using Strings for uint256;
+
     uint256 public contributionAmount = 0.001 ether;
     uint256 public totalContributions;
     uint256 private tokenIdCounter;
@@ -16,21 +17,15 @@ contract AjoParty is ERC721, Ownable {
 
     event NewContribution(address contributor, uint256 tokenId);
 
-    modifier onlyOwner() override {
-        require(owner() == msg.sender, "Caller is not the owner");
-        _;
-    }
-
-    constructor() ERC721("MBParty NFT", "MBP") Ownable(msg.sender) {
-        
-    }
+    constructor() ERC721("MBParty NFT", "MBP") Ownable(msg.sender) {}
 
     function contribute() public payable {
-        require(!hasContributed[msg.sender], "Already contributed");
         require(msg.value >= contributionAmount, "Contribution amount too low");
 
-        ++tokenIdCounter;
-        _safeMint(msg.sender, tokenIdCounter);
+        if (!hasContributed[msg.sender]) {
+            ++tokenIdCounter;
+            _safeMint(msg.sender, tokenIdCounter);
+        }
 
         hasContributed[msg.sender] = true;
         totalContributions += msg.value;
@@ -41,7 +36,7 @@ contract AjoParty is ERC721, Ownable {
         return hasContributed[user];
     }
 
-    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+    function tokenURI(uint256 tokenId) public pure override returns (string memory) {
         string memory name = string(abi.encodePacked("AjoParty #", tokenId.toString()));
         string memory description = "You have a ticket to the Ajo Party";
         string memory image = generateBase64Image();
